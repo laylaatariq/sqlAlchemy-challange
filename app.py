@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func
 
 from flask import Flask, jsonify
+import datetime as dt
 
 #Getting the database
 engine = create_engine("sqlite:///Resources//hawaii.sqlite")
@@ -19,8 +20,6 @@ Station = base.classes.station
 
 #Create a session link
 session = Session(engine)
-
-lastDate = session.query(Measurement.date).order_by((Measurement.date).desc()).limit(1)
 
 #Flask Setup
 app = Flask(__name__)
@@ -37,6 +36,7 @@ def welcome():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/tobs<br/>"
         f"/api/v1.0/startDate<br/>"
+        f"/api/v1.0/<start>/<end>"
     )
 
 @app.route("/Measurements")
@@ -107,7 +107,8 @@ def tobs():
 
     #Query the results
     results = session.query(Measurement.tobs, Measurement.date).\
-        filter(Measurement.date >= "2016-08-23").all()
+        filter(func.strftime("%Y-%m-%d", Measurement.date) >= "2016-08-23").\
+        order_by((func.strftime("%Y-%m-%d", Measurement.date)).desc()).all()
 
     #Close the sesiion
     session.close()
@@ -124,6 +125,44 @@ def tobs():
 
 @app.route("/api/v1.0/<start>")
 def byDate(start):
-    
+
+    #Changing the input to date format
+    # startDate = dt.datetime.strptime(start, "%Y-%m-%d")
+
+    #Querying the resuls
+    results =  session.query(func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs) ).\
+                filter((func.strftime("%Y-%m-%d", Measurement.date) >= start)).all()
+
+    data_stats = []
+    stats_dict = {}
+    for minTemp, maxTemp, AvgTemp in results:
+        stats_dict['Minimum Temperature'] = minTemp
+        stats_dict['Maximum Temperature'] = maxTemp
+        stats_dict['Average Temperature'] = AvgTemp
+        data_stats.append(stats_dict)
+
+    return jsonify(data_stats)
+
+@app.route("/api/v1.0/<start>/<end>")
+def inBetween(start, end):
+
+    #Changing the input to date format
+    # startDate = dt.datetime.strptime(start, "%Y-%m-%d")
+
+    #Querying the resuls
+    results =  session.query(func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs) ).\
+                filter((func.strftime("%Y-%m-%d", Measurement.date) >= start)).\
+                filter((func.strftime("%Y-%m-%d", Measurement.date) <= end)).all()
+
+    new_stats = []
+    new_dict = {}
+    for minTemp, maxTemp, AvgTemp in results:
+        new_dict['Minimum Temperature'] = minTemp
+        new_dict['Maximum Temperature'] = maxTemp
+        new_dict['Average Temperature'] = AvgTemp
+        new_stats.append(new_dict)
+
+    return jsonify(new_stats)
+
 if __name__ == '__main__':
     app.run(debug=True)
