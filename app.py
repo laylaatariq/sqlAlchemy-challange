@@ -17,6 +17,9 @@ base.prepare(engine, reflect=True)
 Measurement = base.classes.measurement
 Station = base.classes.station
 
+#Create a session link
+session = Session(engine)
+
 #Flask Setup
 app = Flask(__name__)
 
@@ -28,14 +31,12 @@ def welcome():
     return (
         f"Available Routes:<br/>"
         f"/Measurements<br/>"
-        f"/Stations"
+        f"//api/v1.0/stations<br/>"
+        f"/api/v1.0/precipitation<br/>"
     )
 
 @app.route("/Measurements")
 def measurements():
-
-    #Create a session link
-    session = Session(engine)
 
     #Query all the results
     results = session.query(Measurement.id, Measurement.station, Measurement.date, Measurement.prcp, Measurement.tobs)
@@ -56,11 +57,8 @@ def measurements():
 
     return jsonify(data_measurements)    
 
-@app.route("/Stations")
+@app.route("/api/v1.0/stations")
 def stations():  
-
-    #Create a session link
-    session = Session(engine)
 
     #Query all the results
     results = session.query(Station.id, Station.station, Station.name, Station.longitude, Station.latitude, Station.elevation)
@@ -81,6 +79,25 @@ def stations():
         data_station.append(station_dict)
 
     return jsonify(data_station)
+
+@app.route("/api/v1.0/precipitation")
+def precipitation():
+    
+    #Query all the results
+    results = session.query(Measurement.date, Measurement.prcp).all()
+
+    #Close the session
+    session.close()
+
+    #Creating a dictionary
+    data_prcp = []
+    prcp_dict = {'date' : 'prcp'}
+    for date, prcp in results:
+        prcp_dict = {date : prcp}
+        data_prcp.append(prcp_dict)
+
+    return jsonify(data_prcp)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
