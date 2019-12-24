@@ -20,6 +20,8 @@ Station = base.classes.station
 #Create a session link
 session = Session(engine)
 
+lastDate = session.query(Measurement.date).order_by((Measurement.date).desc()).limit(1)
+
 #Flask Setup
 app = Flask(__name__)
 
@@ -33,6 +35,7 @@ def welcome():
         f"/Measurements<br/>"
         f"//api/v1.0/stations<br/>"
         f"/api/v1.0/precipitation<br/>"
+        f"/api/v1.0/tobs<br/>"
     )
 
 @app.route("/Measurements")
@@ -98,6 +101,24 @@ def precipitation():
 
     return jsonify(data_prcp)
 
+@app.route("/api/v1.0/tobs")
+def tobs():
+
+    #Query the results
+    result = session.query(Measurement.tobs, Measurement.date).filter(Measurement.date >= '2016-08-23').all()
+
+    #Close the sesiion
+    session.close()
+
+    #Creating the dictionary
+    data_tobs = []
+    tobs_dict = {}
+    for tobs, date in result:
+        tobs_dict['date'] = date
+        tobs_dict['temperature'] = tobs
+        data_tobs.append(tobs_dict)
+
+    return jsonify(data_tobs)
 
 if __name__ == '__main__':
     app.run(debug=True)
