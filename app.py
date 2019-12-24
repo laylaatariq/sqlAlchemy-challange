@@ -36,6 +36,7 @@ def welcome():
         f"//api/v1.0/stations<br/>"
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/tobs<br/>"
+        f"/api/v1.0/startDate<br/>"
     )
 
 @app.route("/Measurements")
@@ -105,7 +106,8 @@ def precipitation():
 def tobs():
 
     #Query the results
-    result = session.query(Measurement.tobs, Measurement.date).filter(Measurement.date >= '2016-08-23').all()
+    results = session.query(Measurement.tobs, Measurement.date).\
+        filter(Measurement.date >= "2016-08-23").all()
 
     #Close the sesiion
     session.close()
@@ -113,12 +115,15 @@ def tobs():
     #Creating the dictionary
     data_tobs = []
     tobs_dict = {}
-    for tobs, date in result:
+    for tobs, date in results:
         tobs_dict['date'] = date
         tobs_dict['temperature'] = tobs
         data_tobs.append(tobs_dict)
 
     return jsonify(data_tobs)
 
+@app.route("/api/v1.0/<start>")
+def byDate(start):
+    
 if __name__ == '__main__':
     app.run(debug=True)
