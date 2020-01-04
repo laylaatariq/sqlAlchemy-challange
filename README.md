@@ -22,9 +22,9 @@ This project contains two files performing different actions using SQLAlchemy an
 2. Use SQL queries to retrieve data
 3. Output the data onto the screen in JSON format
 4. Different routes created:
-    "/Measurements"
-    "//api/v1.0/stations"
-    "/api/v1.0/precipitation"
-    "/api/v1.0/tobs"
-    "/api/v1.0/startDate"
-    "/api/v1.0/startDate/endDate"
+    1. "/Measurements"
+    2. "//api/v1.0/stations"
+    3. "/api/v1.0/precipitation"
+    4. "/api/v1.0/tobs"
+    5. "/api/v1.0/startDate"
+    6. "/api/v1.0/startDate/endDate"
