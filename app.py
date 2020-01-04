@@ -36,7 +36,7 @@ def welcome():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/tobs<br/>"
         f"/api/v1.0/startDate<br/>"
-        f"/api/v1.0/<start>/<end>"
+        f"/api/v1.0/startDate/endDate"
     )
 
 @app.route("/Measurements")
@@ -65,15 +65,15 @@ def measurements():
 def stations():  
 
     #Query all the results
-    results = session.query(Station.id, Station.station, Station.name, Station.longitude, Station.latitude, Station.elevation)
+    results = session.query(Station.id, Station.station, Station.name, Station.longitude, Station.latitude, Station.elevation).all()
 
     #Closing the session
     session.close()
 
     #Creating a dictionary with the measurement table results
     data_station = []
-    station_dict = {}
     for id, station, name, longitude, latitude, elevation in results:
+        station_dict = {}
         station_dict['id'] = id
         station_dict['station'] = station
         station_dict['name'] = name
@@ -106,8 +106,8 @@ def precipitation():
 def tobs():
 
     #Query the results
-    results = session.query(Measurement.tobs, Measurement.date).\
-        filter(func.strftime("%Y-%m-%d", Measurement.date) >= "2016-08-23").\
+    results = session.query(Measurement.tobs, Measurement.date, Measurement.station).\
+        filter(func.strftime("%Y-%m-%d", Measurement.date) >= func.strftime("%Y-%m-%d","2016-08-23")).\
         order_by((func.strftime("%Y-%m-%d", Measurement.date)).desc()).all()
 
     #Close the sesiion
@@ -115,10 +115,12 @@ def tobs():
 
     #Creating the dictionary
     data_tobs = []
-    tobs_dict = {}
-    for tobs, date in results:
+    
+    for tobs, date, station in results:
+        tobs_dict = {}
         tobs_dict['date'] = date
         tobs_dict['temperature'] = tobs
+        tobs_dict['Station'] = station
         data_tobs.append(tobs_dict)
 
     return jsonify(data_tobs)
@@ -133,9 +135,13 @@ def byDate(start):
     results =  session.query(func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs) ).\
                 filter((func.strftime("%Y-%m-%d", Measurement.date) >= start)).all()
 
+    #Closing the session
+    session.close()
+
     data_stats = []
-    stats_dict = {}
+    
     for minTemp, maxTemp, AvgTemp in results:
+        stats_dict = {}
         stats_dict['Minimum Temperature'] = minTemp
         stats_dict['Maximum Temperature'] = maxTemp
         stats_dict['Average Temperature'] = AvgTemp
@@ -150,13 +156,18 @@ def inBetween(start, end):
     # startDate = dt.datetime.strptime(start, "%Y-%m-%d")
 
     #Querying the resuls
-    results =  session.query(func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs) ).\
+    results =  session.query(func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs), Measurement.date ).\
                 filter((func.strftime("%Y-%m-%d", Measurement.date) >= start)).\
                 filter((func.strftime("%Y-%m-%d", Measurement.date) <= end)).all()
 
+    #Closing the session
+    session.close()
+    
     new_stats = []
-    new_dict = {}
-    for minTemp, maxTemp, AvgTemp in results:
+    
+    for minTemp, maxTemp, AvgTemp, date in results:
+        new_dict = {}
+        new_dict['Date'] = date
         new_dict['Minimum Temperature'] = minTemp
         new_dict['Maximum Temperature'] = maxTemp
         new_dict['Average Temperature'] = AvgTemp
