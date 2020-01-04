@@ -156,7 +156,7 @@ def inBetween(start, end):
     # startDate = dt.datetime.strptime(start, "%Y-%m-%d")
 
     #Querying the resuls
-    results =  session.query(func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs), Measurement.date ).\
+    results =  session.query(func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)).\
                 filter((func.strftime("%Y-%m-%d", Measurement.date) >= start)).\
                 filter((func.strftime("%Y-%m-%d", Measurement.date) <= end)).all()
 
@@ -165,9 +165,8 @@ def inBetween(start, end):
     
     new_stats = []
     
-    for minTemp, maxTemp, AvgTemp, date in results:
+    for minTemp, maxTemp, AvgTemp in results:
         new_dict = {}
-        new_dict['Date'] = date
         new_dict['Minimum Temperature'] = minTemp
         new_dict['Maximum Temperature'] = maxTemp
         new_dict['Average Temperature'] = AvgTemp
